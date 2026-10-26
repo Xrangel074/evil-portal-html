@@ -102,27 +102,33 @@
     </div>
   </div>
 
-  <!-- Аудио -->
-  <audio id="bgMusic" src="music.mp3" loop preload="auto"></audio>
+  <!-- Аудио: путь указан относительно папки BENDI, где лежит и HTML, и MP3 -->
+  <audio id="bgMusic" src="bendi.mp3" loop preload="auto"></audio>
 
 <script>
   (function () {
     var audio = document.getElementById('bgMusic');
     var modal = document.getElementById('modal');
 
-    // Показываем окно 404 сразу
+    // 1. Сразу показываем окно 404 при загрузке страницы
     modal.classList.add('show');
 
-    // Функция запуска музыки
+    // 2. Пытаемся запустить музыку сразу (если браузер разрешит)
+    var playPromise = audio.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(function(error) {
+        // Браузер заблокировал автозапуск (это нормально для мобильных)
+        console.log('Автозапуск заблокирован браузером. Ждем клика.');
+      });
+    }
+
+    // 3. Функция запуска музыки
     function playMusic() {
       var p = audio.play();
       if (p && p.catch) p.catch(function () {});
     }
 
-    // 1) Пытаемся запустить сразу (сработает, если браузер разрешит)
-    playMusic();
-
-    // 2) При первом люом касании/клике — гарантированный запуск
+    // 4. При первом касании/клике в любом месте экрана — гарантированно включаем музыку
     function unlock() {
       playMusic();
       document.removeEventListener('touchstart', unlock);
@@ -131,17 +137,17 @@
     document.addEventListener('touchstart', unlock, { once: true });
     document.addEventListener('click', unlock, { once: true });
 
-    // Кнопка ОКЕЙ закрывает окно
+    // 5. Кнопка ОКЕЙ закрывает окно и включает музыку
     document.getElementById('okBtn').addEventListener('click', function (e) {
       e.stopPropagation();
       modal.classList.remove('show');
       playMusic();
     });
 
-    // Кнопка-обманка: НИЧЕГО не делает
+    // 6. Кнопка-обманка: НИЧЕГО не делает (музыка не выключается)
     document.getElementById('fakeMute').addEventListener('click', function (e) {
       e.stopPropagation();
-      // намеренно пусто — музыка не выключается
+      // Пустой обработчик
     });
   })();
 </script>
