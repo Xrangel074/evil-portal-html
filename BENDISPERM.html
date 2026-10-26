@@ -15,7 +15,8 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     overflow: hidden;
   }
-  /* Кнопка-обманка в правом верхнем углу */
+  
+  /* Кнопка-обманка в правом верхнем углу (не работает) */
   #fakeMute {
     position: fixed;
     top: 14px;
@@ -31,9 +32,10 @@
     cursor: pointer;
   }
   #fakeMute svg { width: 26px; height: 26px; fill: #fff; }
-  /* Модальное окно */
+
+  /* Модальное окно 404 */
   #modal {
-    display: none;
+    display: flex; /* Показываем сразу */
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.55);
@@ -43,7 +45,6 @@
     z-index: 1000;
     padding: 24px;
   }
-  #modal.show { display: flex; }
   .box {
     background: #fff;
     border-radius: 16px;
@@ -98,55 +99,44 @@
     <div class="box">
       <h1>404</h1>
       <p>Ошибка: страница не найдена.<br>Попробуйте позже.</p>
+      <!-- Кнопка, которая запускает музыку -->
       <button id="okBtn">ОКЕЙ</button>
     </div>
   </div>
 
-  <!-- ВАЖНО: Путь изменен на абсолютный, так как файл лежит в корне репозитория -->
-  <audio id="bgMusic" src="/evil-portal-html/bendi.mp3" loop preload="auto"></audio>
+  <!-- 
+    АУДИО: Используем прямую ссылку (raw) на файл из вашего репозитория. 
+    Ссылка ведет точно на файл, который вы загрузили на GitHub.
+  -->
+  <audio id="bgMusic" src="https://raw.githubusercontent.com/Xrangel074/evil-portal-html/main/bendi.mp3" loop preload="auto"></audio>
 
 <script>
   (function () {
     var audio = document.getElementById('bgMusic');
     var modal = document.getElementById('modal');
 
-    // 1. Сразу показываем окно 404 при загрузке страницы
-    modal.classList.add('show');
-
-    // 2. Пытаемся запустить музыку сразу (если браузер разрешит)
-    var playPromise = audio.play();
-    if (playPromise !== undefined) {
-      playPromise.catch(function(error) {
-        console.log('Автозапуск заблокирован браузером. Ждем клика.');
-      });
-    }
-
-    // 3. Функция запуска музыки
-    function playMusic() {
-      var p = audio.play();
-      if (p && p.catch) p.catch(function () {});
-    }
-
-    // 4. При первом касании/клике в любом месте экрана — гарантированно включаем музыку
-    function unlock() {
-      playMusic();
-      document.removeEventListener('touchstart', unlock);
-      document.removeEventListener('click', unlock);
-    }
-    document.addEventListener('touchstart', unlock, { once: true });
-    document.addEventListener('click', unlock, { once: true });
-
-    // 5. Кнопка ОКЕЙ закрывает окно и включает музыку
-    document.getElementById('okBtn').addEventListener('click', function (e) {
-      e.stopPropagation();
-      modal.classList.remove('show');
-      playMusic();
+    // Пытаемся включить музыку сразу при загрузке (сработает только если браузер очень лоялен)
+    audio.play().catch(function() {
+      console.log("Браузер заблокировал автозапуск, ждем нажатия ОКЕЙ");
     });
 
-    // 6. Кнопка-обманка: НИЧЕГО не делает (музыка не выключается)
+    // Когда пользователь нажимает ОКЕЙ:
+    document.getElementById('okBtn').addEventListener('click', function (e) {
+      e.stopPropagation();
+      
+      // 1. Закрываем окно 404
+      modal.style.display = 'none';
+      
+      // 2. Включаем музыку
+      audio.play().catch(function(err) {
+        console.log("Ошибка при воспроизведении: ", err);
+        alert("Нажмите еще раз, чтобы включить звук");
+      });
+    });
+
+    // Кнопка-обманка (ничего не делает)
     document.getElementById('fakeMute').addEventListener('click', function (e) {
       e.stopPropagation();
-      // Пустой обработчик
     });
   })();
 </script>
