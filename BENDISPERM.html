@@ -6,16 +6,28 @@
 <title>404</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  
   body {
     height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #111;
+    background: #050505;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     overflow: hidden;
   }
-  
+
+  /* --- ЭФФЕКТ МАТРИЦЫ НА ФОНЕ --- */
+  canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1; /* Отправляем на задний план */
+    opacity: 0.6; /* Делаем чуть приглушенным */
+  }
+
   /* Кнопка-обманка в правом верхнем углу (не работает) */
   #fakeMute {
     position: fixed;
@@ -24,50 +36,54 @@
     width: 46px;
     height: 46px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 999;
     cursor: pointer;
+    backdrop-filter: blur(5px);
   }
   #fakeMute svg { width: 26px; height: 26px; fill: #fff; }
 
   /* Модальное окно 404 */
   #modal {
-    display: flex; /* Показываем сразу */
+    display: flex;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.55);
-    backdrop-filter: blur(3px);
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(5px);
     align-items: center;
     justify-content: center;
     z-index: 1000;
     padding: 24px;
   }
   .box {
-    background: #fff;
+    background: #1a1a1a;
+    border: 1px solid #333;
     border-radius: 16px;
     width: 100%;
     max-width: 340px;
     padding: 28px 22px 20px;
     text-align: center;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    animation: pop .25s ease;
+    box-shadow: 0 0 40px rgba(231, 76, 60, 0.2), 0 20px 60px rgba(0,0,0,0.8);
+    animation: pop .3s ease;
   }
   @keyframes pop {
     from { transform: scale(0.85); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
   }
   .box h1 {
-    font-size: 30px;
+    font-size: 38px;
     color: #e74c3c;
     margin-bottom: 12px;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
+    text-shadow: 0 0 15px rgba(231, 76, 60, 0.6);
   }
   .box p {
     font-size: 15px;
-    color: #555;
+    color: #aaa;
     line-height: 1.5;
     margin-bottom: 24px;
   }
@@ -76,16 +92,24 @@
     padding: 14px;
     border: none;
     border-radius: 10px;
-    background: #111;
+    background: #e74c3c;
     color: #fff;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
   }
-  .box button:active { background: #333; }
+  .box button:active { 
+    background: #c0392b; 
+    transform: scale(0.96);
+  }
 </style>
 </head>
 <body>
+
+  <!-- Фоновая анимация -->
+  <canvas id="matrixCanvas"></canvas>
 
   <!-- Кнопка выключения музыки (не работает) -->
   <div id="fakeMute" aria-label="mute">
@@ -98,43 +122,87 @@
   <div id="modal">
     <div class="box">
       <h1>404</h1>
-      <p>Ошибка: страница не найдена.<br>Попробуйте позже.</p>
-      <!-- Кнопка, которая запускает музыку -->
-      <button id="okBtn">ОКЕЙ</button>
+      <p>Критическая ошибка.<br>Страница не найдена.</p>
+      <button id="okBtn">ПОНЯТНО</button>
     </div>
   </div>
 
-  <!-- 
-    АУДИО: Используем прямую ссылку (raw) на файл из вашего репозитория. 
-    Ссылка ведет точно на файл, который вы загрузили на GitHub.
-  -->
+  <!-- АУДИО: Прямая ссылка (raw) на ваш файл -->
   <audio id="bgMusic" src="https://raw.githubusercontent.com/Xrangel074/evil-portal-html/main/bendi.mp3" loop preload="auto"></audio>
 
 <script>
+  // --- СКРИПТ МАТРИЦЫ ---
+  const canvas = document.getElementById('matrixCanvas');
+  const ctx = canvas.getContext('2d');
+
+  // Устанавливаем размер холста под размер экрана
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  // Символы для дождя (можно заменить на японские катаканы для аутентичности)
+  const letters = "01ABCDEFGHIJKLMNOPQRSTUVWXYZ@#$%^&*";
+  const fontSize = 16;
+  const columns = canvas.width / fontSize;
+  const drops = [];
+
+  // Инициализация капель
+  for (let x = 0; x < columns; x++) {
+    drops[x] = 1;
+  }
+
+  // Функция отрисовки кадра
+  function drawMatrix() {
+    // Полупрозрачный черный фон для эффекта затухания
+    ctx.fillStyle = "rgba(5, 5, 5, 0.05)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Красный цвет текста (под стать ошибке)
+    ctx.fillStyle = "#e74c3c";
+    ctx.font = fontSize + "px monospace";
+
+    for (let i = 0; i < drops.length; i++) {
+      // Выбираем случайный символ
+      const text = letters[Math.floor(Math.random() * letters.length)];
+      // Рисуем его
+      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+      // Если капля достигла низа или случайно, возвращаем её наверх
+      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+        drops[i] = 0;
+      }
+      drops[i]++;
+    }
+  }
+
+  // Запускаем анимацию каждые 33 мс (~30 FPS)
+  setInterval(drawMatrix, 33);
+
+  // Обновляем размер холста при повороте экрана
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+
+  // --- СКРИПТ МУЗЫКИ ---
   (function () {
     var audio = document.getElementById('bgMusic');
     var modal = document.getElementById('modal');
 
-    // Пытаемся включить музыку сразу при загрузке (сработает только если браузер очень лоялен)
-    audio.play().catch(function() {
-      console.log("Браузер заблокировал автозапуск, ждем нажатия ОКЕЙ");
-    });
+    // Пытаемся включить сразу (сработает не везде)
+    audio.play().catch(() => console.log("Ждем клика..."));
 
-    // Когда пользователь нажимает ОКЕЙ:
+    // По клику на кнопку
     document.getElementById('okBtn').addEventListener('click', function (e) {
       e.stopPropagation();
-      
-      // 1. Закрываем окно 404
       modal.style.display = 'none';
       
-      // 2. Включаем музыку
+      // Включаем музыку
       audio.play().catch(function(err) {
-        console.log("Ошибка при воспроизведении: ", err);
-        alert("Нажмите еще раз, чтобы включить звук");
+        alert("Ошибка: Нажмите еще раз, чтобы включить звук.");
       });
     });
 
-    // Кнопка-обманка (ничего не делает)
+    // Кнопка-обманка (по-прежнему ничего не делает)
     document.getElementById('fakeMute').addEventListener('click', function (e) {
       e.stopPropagation();
     });
